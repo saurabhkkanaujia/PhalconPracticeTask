@@ -37,7 +37,8 @@ class UserController extends Controller
 
     public function signinAction()
     {
-        
+        // echo $this->cookies->has('remember-me');
+        // die();
         if ($this->cookies->has('remember-me')) {
             $this->session->loginUser  = json_decode($this->cookies->get('remember-me')->getValue())->email;
             $this->response->redirect('panel/dashboard');
@@ -66,12 +67,13 @@ class UserController extends Controller
                                 [
                                     'email' => $user[0]->email,
                                     'password' => $user[0]->password
-                                ],
+                                ]
+                            ),
                                 time() + 3600
-                            )
                         );
                         $response = new Response();
                         $response->setCookies($cookie);
+                        $response->send();
                     }
                     $this->session->loginUser = $user[0]->email;
                     $this->response->redirect('panel/dashboard');

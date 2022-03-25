@@ -9,7 +9,7 @@ class PanelController extends Controller{
     }
 
     public function dashboardAction(){
-        if (json_decode($this->cookies->get('remember-me')->getValue())->email != null || $this->session->get('loginUser') !=null) {
+        if (json_decode($this->cookies->get('remember-me')->getValue())->email != null || $this->session->has('loginUser')) {
             $this->view->time = $this->time;
         } else {
             $this->response->redirect('user/signin');
