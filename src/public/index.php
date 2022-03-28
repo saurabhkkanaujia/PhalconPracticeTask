@@ -10,6 +10,10 @@ use Phalcon\Mvc\Application;
 use Phalcon\Url;
 use Phalcon\Db\Adapter\Pdo\Mysql;
 use Phalcon\Config;
+use Phalcon\Escaper;
+use Phalcon\Logger;
+use Phalcon\Logger\Adapter\Stream as ls;
+
 
 use Phalcon\Di;
 use Phalcon\Session\Manager;
@@ -31,6 +35,12 @@ $loader->registerDirs(
     [
         APP_PATH . "/controllers/",
         APP_PATH . "/models/",
+    ]
+);
+
+$loader->registerNamespaces(
+    [
+        'App\Components' => APP_PATH . '/component'
     ]
 );
 
@@ -69,9 +79,9 @@ $container->set(
                 'username' => 'root',
                 'password' => 'secret',
                 'dbname'   => 'practice',
-                ]
-            );
-        }
+            ]
+        );
+    }
 );
 
 // $container->set(
@@ -123,11 +133,46 @@ $container->set(
 );
 
 $container->set(
+    'escaper',
+    function () {
+        return new Escaper();
+    }
+);
+
+$container->set(
     'cookies',
     function () {
         $cookies = new Cookies();
         $cookies->useEncryption(false);
         return $cookies;
+    }
+);
+
+$container->set(
+    'login_logger',
+    function () {
+        $adapter = new ls('../app/logs/login.log');
+        $logger  = new Logger(
+            'messages',
+            [
+                'login' => $adapter,
+            ]
+        );
+        return $logger;
+    }
+);
+
+$container->set(
+    'signup_logger',
+    function () {
+        $adapter = new ls('../app/logs/signup.log');
+        $logger  = new Logger(
+            'messages',
+            [
+                'signup' => $adapter,
+            ]
+        );
+        return $logger;
     }
 );
 

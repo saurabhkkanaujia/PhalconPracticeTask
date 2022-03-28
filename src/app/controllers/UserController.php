@@ -2,6 +2,8 @@
 
 use Phalcon\Mvc\Controller;
 use Phalcon\Http\Response;
+use Phalcon\Logger;
+
 
 class UserController extends Controller
 {
@@ -14,8 +16,15 @@ class UserController extends Controller
     {
         if ($this->request->isPost()) {
             $user = new Users();
+            $obj = new App\Components\Myescaper();
+
+            $inputData = array(
+                'email' => $obj->sanitize($this->request->getPost('email')),
+                'password' => $obj->sanitize($this->request->getPost('password'))
+            );
+
             $user->assign(
-                $this->request->getPost(),
+                $inputData,
                 [
                     'email',
                     'password'
@@ -30,6 +39,7 @@ class UserController extends Controller
                 $this->response->redirect('user/signin');
                 $this->view->message = "Register succesfully";
             } else {
+                $this->signup_logger->error("Not Register succesfully due to following reason: <br>" . implode("<br>", $user->getMessages()));
                 $this->view->message = "Not Register succesfully due to following reason: <br>" . implode("<br>", $user->getMessages());
             }
         }
@@ -45,21 +55,27 @@ class UserController extends Controller
         } else {
             if ($this->request->isPost()) {
                 $postData = $this->request->getPost();
-    
+
+                $obj = new App\Components\Myescaper();
+                $email = $obj->sanitize($postData['email']);
+                $password = $obj->sanitize($postData['password']);
+
                 $user = Users::find([
                     'conditions' => 'email= :email: AND password = :password:',
                     'bind' => [
-                        'email' => $postData['email'],
-                        'password' => $postData['password'],
+                        'email' => $email,
+                        'password' => $password,
                     ]
                 ]);
-    
+
                 if (count($user) == 0) {
+                    $this->login_logger->error("Invalid Credentials");
+
                     $this->error;
                     die();
                 } else {
                     if (isset($postData['checkBox'])) {
-    
+
                         $cookie = $this->cookies;
                         $cookie->set(
                             'remember-me',
@@ -69,11 +85,11 @@ class UserController extends Controller
                                     'password' => $user[0]->password
                                 ]
                             ),
-                                time() + 3600
+                            time() + 3600
                         );
-                        $response = new Response();
-                        $response->setCookies($cookie);
-                        $response->send();
+                        // $response = new Response();
+                        $this->response->setCookies($cookie);
+                        // $this->response->send();
                     }
                     $this->session->loginUser = $user[0]->email;
                     $this->response->redirect('panel/dashboard');
